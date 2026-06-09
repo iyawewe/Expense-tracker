@@ -1,0 +1,112 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Navy Trust design system — Mini Expense Tracker.
+ * Heading font: Libre Baskerville (serif). Body font: IBM Plex Sans.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Libre Baskerville", ui-serif, Georgia, serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-navy: var(--navy);
+  --color-navy-mid: var(--navy-mid);
+  --color-steel: var(--steel);
+  --color-mist: var(--mist);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  /* Navy Trust palette */
+  --navy: oklch(0.245 0.064 264);
+  --navy-mid: oklch(0.346 0.063 260);
+  --steel: oklch(0.546 0.082 250);
+  --mist: oklch(0.946 0.012 250);
+
+  --background: var(--mist);
+  --foreground: var(--navy);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--navy);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--navy);
+  --primary: var(--navy);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--mist);
+  --secondary-foreground: var(--navy);
+  --muted: var(--mist);
+  --muted-foreground: var(--steel);
+  --accent: var(--mist);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.577 0.21 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border: oklch(0.9 0.015 250);
+  --input: oklch(0.9 0.015 250);
+  --ring: var(--steel);
+
+  --chart-1: var(--navy);
+  --chart-2: var(--navy-mid);
+  --chart-3: var(--steel);
+  --chart-4: oklch(0.68 0.08 240);
+  --chart-5: oklch(0.78 0.04 240);
+
+  --sidebar: var(--navy);
+  --sidebar-foreground: oklch(1 0 0);
+  --sidebar-primary: var(--steel);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--navy-mid);
+  --sidebar-accent-foreground: oklch(1 0 0);
+  --sidebar-border: var(--navy-mid);
+  --sidebar-ring: var(--steel);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html, body {
+    font-family: var(--font-sans);
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+  }
+
+  h1, h2, h3, h4, h5, .font-serif {
+    font-family: var(--font-serif);
+  }
+}
