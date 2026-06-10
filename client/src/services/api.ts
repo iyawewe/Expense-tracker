@@ -3,7 +3,7 @@
 // Node.js/Express backend later is just a matter of running it on
 // http://localhost:5000 with matching routes.
 
-export const API_BASE_URL = "http://localhost:5000/api";
+const BASE_URL = "https://expense-tracker-backend-9y4t.onrender.com/api";
 
 export type ExpenseCategory =
   | "Food"
