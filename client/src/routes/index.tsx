@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LayoutDashboard, History, BarChart3, Download, Wallet } from "lucide-react";
+import { LayoutDashboard, History, Trash2, PlusCircle, Edit3, Sliders, Download, Wallet, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 import { SummaryCards } from "../components/expense/SummerCards";
@@ -16,18 +16,51 @@ import {
 import { expensesApi, type Expense, type ExpenseInput } from "../services/api";
 import { exportExpensesToCsv } from "../lib/expense-utils";
 
-// This should only appear ONCE in the file
 export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
+interface ActivityLog {
+  id: string;
+  actionType: "ADD" | "DELETE" | "UPDATE" | "BUDGET_CHANGE";
+  description: string;
+  timestamp: string;
+  date: string;
+}
+
 function Dashboard() {
-  // Your code stays exactly the same below...
+  const [activeTab, setActiveTab] = useState<"dashboard" | "history">("dashboard");
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [filters, setFilters] = useState<ExpenseFilters>(DEFAULT_FILTERS);
+  
+  const [budget, setBudget] = useState<number>(() => {
+    const saved = localStorage.getItem("app_budget_limit");
+    return saved ? Number(saved) : 2000;
+  });
+
+  const [logs, setLogs] = useState<ActivityLog[]>(() => {
+    const saved = localStorage.getItem("app_activity_logs");
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const logSystemAction = (actionType: "ADD" | "DELETE" | "UPDATE" | "BUDGET_CHANGE", description: string) => {
+    const newLog: ActivityLog = {
+      id: Date.now().toString(),
+      actionType,
+      description,
+      timestamp: new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", second: "2-digit" }),
+      date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    };
+    
+    setLogs((prev) => {
+      const updated = [newLog, ...prev];
+      localStorage.setItem("app_activity_logs", JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   const filtered = useMemo(() => applyFilters(expenses, filters), [expenses, filters]);
 
@@ -51,23 +84,56 @@ function Dashboard() {
     loadExpenses();
   }, [loadExpenses]);
 
+  const handleBudgetChange = (value: number) => {
+    const cleanValue = Math.max(0, value);
+    setBudget(cleanValue);
+    localStorage.setItem("app_budget_limit", cleanValue.toString());
+    logSystemAction("BUDGET_CHANGE", `Updated monthly budget limit to $${cleanValue.toLocaleString()}`);
+  };
+
+  const exportLogsToCsv = () => {
+    if (logs.length === 0) return;
+    
+    const headers = ["Date", "Timestamp", "Action Type", "Description"];
+    const rows = logs.map(log => [
+      `"${log.date}"`,
+      `"${log.timestamp}"`,
+      `"${log.actionType}"`,
+      `"${log.description.replace(/"/g, '""')}"` // Double up quotes to escape CSV formats safely
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `system_audit_logs_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Audit logs exported successfully");
+  };
+
   async function handleSubmit(data: ExpenseInput) {
     setSubmitting(true);
     try {
       if (editing) {
         await expensesApi.update(editing.id, data);
         toast.success("Expense updated");
+        logSystemAction("UPDATE", `Modified details for "${data.note || "Uncategorized"}" ($${data.amount})`);
         setEditing(null);
       } else {
         await expensesApi.create(data);
         toast.success("Expense logged");
+        logSystemAction("ADD", `Added expense "${data.note || "Uncategorized"}" under ${data.category} ($${data.amount})`);
       }
       await loadExpenses();
     } catch (err) {
       console.error(err);
-      toast.error("Save failed", {
-        description: err instanceof Error ? err.message : "Unknown error",
-      });
+      toast.error("Save failed");
     } finally {
       setSubmitting(false);
     }
@@ -78,15 +144,30 @@ function Dashboard() {
     try {
       await expensesApi.remove(e.id);
       toast.success("Expense deleted");
+      logSystemAction("DELETE", `Removed expense "${e.note || "Uncategorized"}" ($${e.amount})`);
       if (editing?.id === e.id) setEditing(null);
       await loadExpenses();
     } catch (err) {
       console.error(err);
-      toast.error("Delete failed", {
-        description: err instanceof Error ? err.message : "Unknown error",
-      });
+      toast.error("Delete failed");
     }
   }
+
+  const handleClearHistory = () => {
+    if (confirm("Permanently clear all activity history logs?")) {
+      localStorage.removeItem("app_activity_logs");
+      setLogs([]);
+    }
+  };
+
+  const getActionStyles = (type: ActivityLog["actionType"]) => {
+    switch (type) {
+      case "ADD": return { bg: "bg-emerald-50/60 border-emerald-100", text: "text-emerald-700", badge: "bg-emerald-100 text-emerald-800", icon: <PlusCircle className="h-4 w-4" /> };
+      case "DELETE": return { bg: "bg-rose-50/60 border-rose-100", text: "text-rose-700", badge: "bg-rose-100 text-rose-800", icon: <Trash2 className="h-4 w-4" /> };
+      case "UPDATE": return { bg: "bg-amber-50/60 border-amber-100", text: "text-amber-700", badge: "bg-amber-100 text-amber-800", icon: <Edit3 className="h-4 w-4" /> };
+      case "BUDGET_CHANGE": return { bg: "bg-sky-50/60 border-sky-100", text: "text-sky-700", badge: "bg-sky-100 text-sky-800", icon: <Sliders className="h-4 w-4" /> };
+    }
+  };
 
   const monthLabel = new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" });
 
@@ -99,101 +180,168 @@ function Dashboard() {
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3b6fa0]">
               <Wallet className="h-5 w-5" />
             </div>
-            <h1 className="text-xl font-bold leading-tight">
-              Mini Expense
-              <br />
-              Tracker
-            </h1>
+            <h1 className="text-xl font-bold leading-tight">Mini Expense<br />Tracker</h1>
           </div>
         </div>
 
         <nav className="flex-1 space-y-2 px-4">
-          <NavItem icon={<LayoutDashboard className="h-5 w-5" />} label="Dashboard" active />
-          <NavItem icon={<History className="h-5 w-5" />} label="History" />
-          <NavItem icon={<BarChart3 className="h-5 w-5" />} label="Analytics" />
+          <button 
+            type="button"
+            onClick={() => setActiveTab("dashboard")}
+            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors ${
+              activeTab === "dashboard" ? "bg-[#1e3a5f] text-white" : "text-blue-100/80 hover:bg-[#1e3a5f]/50"
+            }`}
+          >
+            <LayoutDashboard className="h-5 w-5 opacity-70" />
+            Dashboard
+          </button>
+          
+          <button 
+            type="button"
+            onClick={() => setActiveTab("history")}
+            className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors ${
+              activeTab === "history" ? "bg-[#1e3a5f] text-white" : "text-blue-100/80 hover:bg-[#1e3a5f]/50"
+            }`}
+          >
+            <History className="h-5 w-5 opacity-70" />
+            History
+          </button>
         </nav>
 
         <div className="mt-auto border-t border-[#1e3a5f] p-6">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-200">
-            Current Plan
-          </p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-200">Current Plan</p>
           <p className="text-sm font-medium text-white">Personal Basic</p>
         </div>
       </aside>
 
-      {/* Main Metric & Dashboard Layout Canvas */}
-      <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12">
-        <header className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <h2 className="text-3xl font-bold text-[#0f1b3d]">Monthly Overview</h2>
-            <p className="mt-1 text-[#3b6fa0]">Tracking spending for {monthLabel}</p>
-          </div>
-          <button
-            onClick={() => exportExpensesToCsv(filtered)}
-            disabled={filtered.length === 0}
-            className="flex items-center gap-2 self-start rounded-lg border border-[#3b6fa0]/20 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50 md:self-auto"
-          >
-            <Download className="h-4 w-4" />
-            Export CSV
-          </button>
-        </header>
+      {/* Main Content Render Layout Switch */}
+      {activeTab === "dashboard" ? (
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12">
+          <header className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <h2 className="text-3xl font-bold text-[#0f1b3d]">Monthly Overview</h2>
+              <p className="mt-1 text-[#3b6fa0]">Tracking spending for {monthLabel}</p>
+            </div>
+            <button
+              onClick={() => exportExpensesToCsv(filtered)}
+              disabled={filtered.length === 0}
+              className="flex items-center gap-2 self-start rounded-lg border border-[#3b6fa0]/20 bg-white px-5 py-2.5 text-sm font-semibold shadow-sm transition-all hover:bg-white/80 disabled:cursor-not-allowed disabled:opacity-50 md:self-auto"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </button>
+          </header>
 
-        {/* Aggregated Financial Analytics Cards */}
-        <div className="mb-8">
-  <SummaryCards expenses={filtered} />
-</div>
-
-        {/* Dynamic Filtering Toolbelt */}
-        <div className="mb-8">
-          <ExpenseFiltersBar filters={filters} onChange={setFilters} />
-        </div>
-
-        {/* Two-Column Transaction Interface Grid */}
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
-          <div className="xl:col-span-1">
-            <ExpenseForm
-              editing={editing}
-              submitting={submitting}
-              onSubmit={handleSubmit}
-              onCancelEdit={() => setEditing(null)}
-            />
+          <div className="mb-8">
+            <SummaryCards expenses={filtered} budget={budget} />
           </div>
 
-          <div className="space-y-8 xl:col-span-2">
-            <CategoryChart expenses={filtered} />
-            <ExpenseTable
-              expenses={filtered}
-              loading={loading}
-              onEdit={setEditing}
-              onDelete={handleDelete}
-            />
+          <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-4 rounded-2xl border border-white/40 shadow-sm">
+            <div className="flex-1">
+              <ExpenseFiltersBar filters={filters} onChange={setFilters} />
+            </div>
+            <div className="flex items-center gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 border-[#e8edf3]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#3b6fa0] whitespace-nowrap">Set Budget Limit:</span>
+              <div className="relative flex items-center rounded-xl bg-[#e8edf3] px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#3b6fa0]/40">
+                <span className="text-sm font-semibold text-[#3b6fa0] mr-1">$</span>
+                <input
+                  type="number"
+                  value={budget === 0 ? "" : budget}
+                  onChange={(e) => handleBudgetChange(Number(e.target.value))}
+                  className="w-24 bg-transparent border-none p-0 text-sm font-bold text-[#0f1b3d] focus:ring-0 outline-none"
+                  placeholder="0"
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
 
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+            <div className="xl:col-span-1">
+              <ExpenseForm editing={editing} submitting={submitting} onSubmit={handleSubmit} onCancelEdit={() => setEditing(null)} />
+            </div>
+            <div className="space-y-8 xl:col-span-2">
+              <CategoryChart expenses={filtered} />
+              <ExpenseTable expenses={filtered} loading={loading} onEdit={setEditing} onDelete={handleDelete} />
+            </div>
+          </div>
+        </main>
+      ) : (
+        <main className="flex-1 overflow-y-auto p-6 md:p-10 lg:p-12">
+          <header className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+            <div>
+              <h2 className="text-3xl font-bold text-[#0f1b3d] flex items-center gap-3">
+                <History className="h-8 w-8 text-[#3b6fa0]" />
+                Action History Log
+              </h2>
+              <p className="mt-1 text-[#3b6fa0]">System audit timeline capturing expense logging, editing updates, and budget modifications.</p>
+            </div>
+            
+            {/* Action Buttons Toolbar Container */}
+            <div className="flex items-center gap-3 self-start md:self-auto">
+              {logs.length > 0 && (
+                <>
+                  {/* 🌟 NEW: Styled Log Sheet Export Button */}
+                  <button
+                    onClick={exportLogsToCsv}
+                    className="flex items-center gap-2 rounded-lg border border-[#3b6fa0]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#0f1b3d] shadow-sm transition-all hover:bg-white/80"
+                  >
+                    <Download className="h-3.5 w-3.5 text-[#3b6fa0]" />
+                    Download Logs (CSV)
+                  </button>
+
+                  <button 
+                    onClick={handleClearHistory} 
+                    className="rounded-lg border border-rose-200 bg-white px-4 py-2.5 text-xs font-bold text-rose-600 shadow-sm transition-all hover:bg-rose-50/50"
+                  >
+                    Clear Log Sheets
+                  </button>
+                </>
+              )}
+            </div>
+          </header>
+
+          <div className="rounded-2xl border border-white bg-white p-6 md:p-8 shadow-[0_4px_20px_rgba(15,27,61,0.03)]">
+            {logs.length === 0 ? (
+              <div className="py-20 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#e8edf3] text-[#3b6fa0]">
+                  <FileText className="h-7 w-7" />
+                </div>
+                <h3 className="text-lg font-bold text-[#0f1b3d]">No Operations Logged Yet</h3>
+                <p className="mt-1 text-sm text-[#3b6fa0]/70 max-w-sm mx-auto">Actions like adding expenses or changing limits will construct a trace here.</p>
+              </div>
+            ) : (
+              <div className="relative border-l-2 border-[#e8edf3] pl-6 ml-4 space-y-6">
+                {logs.map((log) => {
+                  const styles = getActionStyles(log.actionType) || { bg: "bg-slate-50", text: "text-slate-700", badge: "bg-slate-100", icon: <History className="h-4 w-4" /> };
+                  return (
+                    <div key={log.id} className="relative group">
+                      <div className={`absolute -left-[35px] top-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-white ${styles.text} shadow-sm`}>
+                        {styles.icon}
+                      </div>
+                      <div className={`rounded-xl border p-4 bg-white ${styles.bg}`}>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className={`text-[10px] font-extrabold tracking-wider uppercase px-2 py-0.5 rounded-md ${styles.badge}`}>
+                              {log.actionType}
+                            </span>
+                            <p className="text-sm font-semibold text-[#0f1b3d]">{log.description}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-xs font-mono font-medium text-[#3b6fa0]">
+                            <span>{log.timestamp}</span>
+                            <span>•</span>
+                            <span>{log.date}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </main>
+      )}
       <Toaster richColors position="top-right" />
     </div>
-  );
-}
-
-function NavItem({
-  icon,
-  label,
-  active,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors ${
-        active ? "bg-[#1e3a5f] text-white" : "text-blue-100/80 hover:bg-[#1e3a5f]/50"
-      }`}
-    >
-      <span className="opacity-70">{icon}</span>
-      {label}
-    </button>
   );
 }

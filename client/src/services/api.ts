@@ -52,3 +52,10 @@ export const expensesApi = {
   remove: (id: string) =>
     request<void>(`/expenses/${id}`, { method: "DELETE" }),
 };
+
+export interface ActivityLog {
+  id: string;
+  actionType: "ADD" | "DELETE" | "UPDATE" | "BUDGET_CHANGE";
+  description: string;
+  timestamp: string;
+}

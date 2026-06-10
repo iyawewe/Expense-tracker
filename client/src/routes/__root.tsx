@@ -1,119 +1,68 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  Outlet,
-  Link,
-  createRootRouteWithContext,
-  useRouter,
-  HeadContent,
-  Scripts,
-} from "@tanstack/react-router";
-import { type ReactNode } from "react";
+import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { LayoutDashboard, History, BarChart3, Wallet } from "lucide-react";
 
-import appCss from "../styles.css?url";
-
-function NotFoundComponent() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
-  console.error(error);
-  const router = useRouter();
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Mini Expense Tracker" },
-      { name: "description", content: "Full Stack Expense Tracker Ledger Application" },
-      { property: "og:title", content: "Mini Expense Tracker" },
-      { property: "og:type", content: "website" },
-    ],
-    links: [
-      { rel: "stylesheet", href: appCss },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap",
-      },
-    ],
-  }),
-  shellComponent: RootShell,
-  component: RootComponent,
-  notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+export const Route = createRootRoute({
+  component: RootLayout,
 });
 
-function RootShell({ children }: { children: ReactNode }) {
+function RootLayout() {
   return (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  );
-}
+    <div className="flex min-h-screen w-full bg-[#e8edf3] text-[#0f1b3d]">
+      {/* 🌟 GLOBAL SIDEBAR NAVIGATION: Rendered inside Router Context safely */}
+      <aside className="sticky top-0 hidden h-screen w-72 flex-col bg-[#0f1b3d] text-white lg:flex">
+        <div className="p-8">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#3b6fa0]">
+              <Wallet className="h-5 w-5" />
+            </div>
+            <h1 className="text-xl font-bold leading-tight">
+              Mini Expense
+              <br />
+              Tracker
+            </h1>
+          </div>
+        </div>
 
-function RootComponent() {
-  const { queryClient } = Route.useRouteContext();
+        <nav className="flex-1 space-y-2 px-4">
+          <Link
+            to="/"
+            activeProps={{ className: "bg-[#1e3a5f] text-white" }}
+            inactiveProps={{ className: "text-blue-100/80 hover:bg-[#1e3a5f]/50" }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors"
+          >
+            <LayoutDashboard className="h-5 w-5 opacity-70" />
+            Dashboard
+          </Link>
 
-  return (
-    <QueryClientProvider client={queryClient}>
+          <Link
+            to="/history"
+            activeProps={{ className: "bg-[#1e3a5f] text-white" }}
+            inactiveProps={{ className: "text-blue-100/80 hover:bg-[#1e3a5f]/50" }}
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors"
+          >
+            <History className="h-5 w-5 opacity-70" />
+            History
+          </Link>
+
+          <button
+            type="button"
+            className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors text-blue-100/80 hover:bg-[#1e3a5f]/50"
+          >
+            <BarChart3 className="h-5 w-5 opacity-70" />
+            Analytics
+          </button>
+        </nav>
+
+        <div className="mt-auto border-t border-[#1e3a5f] p-6">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-blue-200">
+            Current Plan
+          </p>
+          <p className="text-sm font-medium text-white">Personal Basic</p>
+        </div>
+      </aside>
+
+      {/* The active page content route (Dashboard or History) is dynamically injected here */}
       <Outlet />
-    </QueryClientProvider>
+    </div>
   );
 }
