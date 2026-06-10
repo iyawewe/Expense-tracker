@@ -35,7 +35,8 @@ export class ExpenseController {
 
   static async update(req: Request, res: Response) {
     try {
-      const id = req.params.id;
+      // Force it to be a single string so TypeScript is happy
+      const id = String(req.params.id);
       const item = await ExpenseService.update(id, req.body);
       if (!item) return res.status(404).json({ error: 'Target transaction record not found.' });
       res.json(item);
@@ -46,7 +47,8 @@ export class ExpenseController {
 
   static async delete(req: Request, res: Response) {
     try {
-      const id = req.params.id;
+      // Force it to be a single string so TypeScript is happy
+      const id = String(req.params.id);
       const successful = await ExpenseService.delete(id);
       if (!successful) return res.status(404).json({ error: 'Target transaction record not found.' });
       res.status(204).send(); // Matches 204 No Content handling in Lovable's client file

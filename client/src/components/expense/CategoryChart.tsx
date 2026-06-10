@@ -1,68 +1,52 @@
-import { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
-import type { Expense } from "@/services/api";
-import { CATEGORIES, CATEGORY_COLORS, formatCurrency } from "@/lib/expense-utils";
+import React from 'react';
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
-interface Props {
-  expenses: Expense[];
+// FIX 1: Import CATEGORY_COLORS object map instead of a function
+import { CATEGORY_COLORS } from '../../lib/expense-utils';
+
+interface CategoryData {
+  name: string;
+  value: number;
 }
 
-export function CategoryChart({ expenses }: Props) {
-  const data = useMemo(() => {
-    const totals: Record<string, number> = Object.fromEntries(CATEGORIES.map((c) => [c, 0]));
-    expenses.forEach((e) => {
-      totals[e.category] = (totals[e.category] ?? 0) + e.amount;
-    });
-    return CATEGORIES.map((c) => ({ category: c, amount: Number(totals[c].toFixed(2)) }));
-  }, [expenses]);
+interface CategoryChartProps {
+  data: CategoryData[];
+}
 
-  const hasData = data.some((d) => d.amount > 0);
+export const CategoryChart: React.FC<CategoryChartProps> = ({ data }) => {
+  const total = data.reduce((sum, item) => sum + item.value, 0);
 
   return (
-    <section className="rounded-2xl border border-white bg-white p-8 shadow-[0_4px_20px_rgba(15,27,61,0.04)]">
-      <h3 className="mb-8 text-xl font-bold text-[#0f1b3d]">Spending by Category</h3>
-      <div className="h-56 w-full">
-        {hasData ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e8edf3" vertical={false} />
-              <XAxis
-                dataKey="category"
-                tick={{ fill: "#3b6fa0", fontSize: 11, fontWeight: 600 }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "#3b6fa0", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v) => `$${v}`}
-              />
-              <Tooltip
-                cursor={{ fill: "#e8edf3", opacity: 0.5 }}
-                contentStyle={{
-                  background: "#0f1b3d",
-                  border: "none",
-                  borderRadius: 8,
-                  color: "#fff",
-                  fontSize: 12,
-                  fontFamily: "IBM Plex Sans",
-                }}
-                formatter={(value: number) => [formatCurrency(value), "Total"]}
-              />
-              <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
-                {data.map((entry) => (
-                  <Cell key={entry.category} fill={CATEGORY_COLORS[entry.category]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm italic text-[#3b6fa0]">
-            No expense data yet. Log your first expense to see analytics.
-          </div>
-        )}
-      </div>
-    </section>
+    <div className="w-full h-[300px] flex flex-col justify-center items-center">
+      {total === 0 ? (
+        <p className="text-muted-foreground text-sm">No data available for this period</p>
+      ) : (
+        // FIX 2: Changed h="100%" to height="100%"
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={60}
+              outerRadius={80}
+              paddingAngle={5}
+              dataKey="value"
+            >
+              {data.map((entry: CategoryData, index: number) => {
+                // Safely look up the category color, or default to a gray hex if not found
+                const categoryKey = entry.name as keyof typeof CATEGORY_COLORS;
+                const fillColor = CATEGORY_COLORS[categoryKey] || '#888888';
+                return <Cell key={`cell-${index}`} fill={fillColor} />;
+              })}
+            </Pie>
+            <Tooltip 
+              formatter={(value: number) => [`$${value.toFixed(2)}`, 'Amount']}
+            />
+            <Legend />
+          </PieChart>
+        </ResponsiveContainer>
+      )}
+    </div>
   );
-}
+};

@@ -1,5 +1,4 @@
 import db from '../config/db';
-
 export interface Expense {
   id: string;
   amount: number;
@@ -14,11 +13,10 @@ export class ExpenseService {
   static getAll(): Promise<Expense[]> {
     return new Promise((resolve, reject) => {
       const query = `SELECT * FROM expenses ORDER BY date DESC, id DESC`;
-      db.all(query, [], (err, rows: any[]) => {
+      db.all(query, [], (err: Error | null, rows: any) => {
         if (err) return reject(err);
         
-        // Map native integer id into a string for the client layer
-        const formatted = rows.map(row => ({
+        const formatted = (rows || []).map((row: any) => ({
           ...row,
           id: row.id.toString()
         }));
@@ -32,7 +30,7 @@ export class ExpenseService {
       const query = `INSERT INTO expenses (amount, category, date, note) VALUES (?, ?, ?, ?)`;
       const values = [expense.amount, expense.category, expense.date, expense.note || null];
 
-      db.run(query, values, function (err) {
+      db.run(query, values, function (this: any, err: Error | null) {
         if (err) return reject(err);
         resolve({
           id: this.lastID.toString(),
@@ -48,7 +46,7 @@ export class ExpenseService {
       const intId = parseInt(id, 10);
       const values = [expense.amount, expense.category, expense.date, expense.note || null, intId];
 
-      db.run(query, values, function (err) {
+      db.run(query, values, function (this: any, err: Error | null) {
         if (err) return reject(err);
         if (this.changes === 0) return resolve(null);
         resolve({ id, ...expense });
@@ -59,7 +57,7 @@ export class ExpenseService {
   static delete(id: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const intId = parseInt(id, 10);
-      db.run(`DELETE FROM expenses WHERE id = ?`, [intId], function (err) {
+      db.run(`DELETE FROM expenses WHERE id = ?`, [intId], function (this: any, err: Error | null) {
         if (err) return reject(err);
         resolve(this.changes > 0);
       });

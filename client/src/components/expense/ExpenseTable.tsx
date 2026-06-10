@@ -1,6 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
-import type { Expense } from "@/services/api";
-import { CATEGORY_COLORS, formatCurrency, formatDate } from "@/lib/expense-utils";
+// FIX 1 & 2: Switched path aliases (@/) to safe relative paths
+import type { Expense } from "../../services/api";
+import { CATEGORY_COLORS, formatCurrency, formatDate } from "../../lib/expense-utils";
 
 interface Props {
   expenses: Expense[];
@@ -43,45 +44,51 @@ export function ExpenseTable({ expenses, loading, onEdit, onDelete }: Props) {
                 </td>
               </tr>
             ) : (
-              sorted.map((e) => (
-                <tr key={e.id} className="group transition-colors hover:bg-[#e8edf3]/40">
-                  <td className="whitespace-nowrap px-6 py-4 font-medium tabular-nums text-[#1e3a5f]">
-                    {formatDate(e.date)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <span
-                      className="rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
-                      style={{ backgroundColor: CATEGORY_COLORS[e.category] }}
-                    >
-                      {e.category}
-                    </span>
-                  </td>
-                  <td className="max-w-[260px] truncate px-6 py-4 italic text-[#3b6fa0]">
-                    {e.note || "—"}
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-4 text-right font-bold tabular-nums text-[#0f1b3d]">
-                    {formatCurrency(e.amount)}
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => onEdit(e)}
-                        aria-label="Edit expense"
-                        className="rounded-md p-2 text-[#3b6fa0] transition-colors hover:bg-[#e8edf3] hover:text-[#0f1b3d]"
+              sorted.map((e) => {
+                // FIX 3: Explicitly cast category string as a key of CATEGORY_COLORS object map
+                const categoryKey = e.category as keyof typeof CATEGORY_COLORS;
+                const backgroundColor = CATEGORY_COLORS[categoryKey] || '#888888';
+
+                return (
+                  <tr key={e.id} className="group transition-colors hover:bg-[#e8edf3]/40">
+                    <td className="whitespace-nowrap px-6 py-4 font-medium tabular-nums text-[#1e3a5f]">
+                      {formatDate(e.date)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className="rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                        style={{ backgroundColor }}
                       >
-                        <Pencil className="h-4 w-4" />
-                      </button>
-                      <button
-                        onClick={() => onDelete(e)}
-                        aria-label="Delete expense"
-                        className="rounded-md p-2 text-[#3b6fa0] transition-colors hover:bg-red-50 hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        {e.category}
+                      </span>
+                    </td>
+                    <td className="max-w-[260px] truncate px-6 py-4 italic text-[#3b6fa0]">
+                      {e.note || "—"}
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right font-bold tabular-nums text-[#0f1b3d]">
+                      {formatCurrency(e.amount)}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-1">
+                        <button
+                          onClick={() => onEdit(e)}
+                          aria-label="Edit expense"
+                          className="rounded-md p-2 text-[#3b6fa0] transition-colors hover:bg-[#e8edf3] hover:text-[#0f1b3d]"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => onDelete(e)}
+                          aria-label="Delete expense"
+                          className="rounded-md p-2 text-[#3b6fa0] transition-colors hover:bg-red-50 hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
