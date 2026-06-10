@@ -1,6 +1,6 @@
 import { TrendingUp, Flame, CheckCircle2 } from "lucide-react";
-import type { Expense } from "@/services/api";
-import { formatCurrency, isCurrentMonth } from "@/lib/expense-utils";
+import { type Expense } from "../../services/api";
+import { formatCurrency, isCurrentMonth } from "../../lib/expense-utils";
 
 interface Props {
   expenses: Expense[];

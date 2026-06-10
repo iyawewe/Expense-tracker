@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import type { Expense, ExpenseCategory, ExpenseInput } from "@/services/api";
-import { CATEGORIES } from "@/lib/expense-utils";
+import { expensesApi, type Expense, type ExpenseInput, type ExpenseCategory } from "../../services/api";
+import { CATEGORIES } from "../../lib/expense-utils";
 
 interface Props {
   editing?: Expense | null;
