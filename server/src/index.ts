@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { Database } from 'bun:sqlite'; // <-- Changed to Bun's native SQLite
+import { Database } from 'bun:sqlite';
 import path from 'path';
 
 const app = express();
@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 const dbPath = path.resolve(__dirname, '../database.sqlite');
-const db = new Database(dbPath); // <-- Clean, native initialization
+const db = new Database(dbPath);
 console.log('Connected to persistent Bun SQLite database at:', dbPath);
 
 db.exec(`
@@ -43,7 +43,7 @@ const logToDatabase = (actionType: string, description: string) => {
 app.get('/api/expenses', (req: Request, res: Response) => {
   try {
     const rows = db.prepare('SELECT * FROM expenses ORDER BY createdAt DESC').all();
-    res.json(rows);
+    res.json(rows || []);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
@@ -100,7 +100,7 @@ app.delete('/api/expenses/:id', (req: Request, res: Response) => {
 app.get('/api/logs', (req: Request, res: Response) => {
   try {
     const rows = db.prepare('SELECT * FROM activity_logs ORDER BY createdAt DESC').all();
-    res.json(rows);
+    res.json(rows || []);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
