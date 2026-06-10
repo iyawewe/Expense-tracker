@@ -1,7 +1,24 @@
 import React from 'react';
-
-// FIX 1 & 2: Switched path aliases (@/) to safe relative paths
 import { CATEGORIES } from '../../lib/expense-utils';
+
+export interface ExpenseFilters {
+  search: string;
+  category: string;
+}
+
+export const DEFAULT_FILTERS: ExpenseFilters = {
+  search: '',
+  category: 'all',
+};
+
+export const applyFilters = (expenses: any[], filters: ExpenseFilters) => {
+  return expenses.filter((expense) => {
+    const matchesSearch = expense.note?.toLowerCase().includes(filters.search.toLowerCase()) ||
+                          expense.category?.toLowerCase().includes(filters.search.toLowerCase());
+    const matchesCategory = filters.category === 'all' || expense.category === filters.category;
+    return matchesSearch && matchesCategory;
+  });
+};
 
 interface ExpenseFiltersProps {
   search: string;
@@ -39,7 +56,6 @@ export const ExpenseFilters: React.FC<ExpenseFiltersProps> = ({
           onChange={(e) => onCategoryChange(e.target.value)}
         >
           <option value="all">All Categories</option>
-          {/* FIX 3: Explicitly typed the parameter 'c' as a string */}
           {CATEGORIES.map((c: string) => (
             <option key={c} value={c}>
               {c.charAt(0).toUpperCase() + c.slice(1)}
@@ -63,3 +79,5 @@ export const ExpenseFilters: React.FC<ExpenseFiltersProps> = ({
     </div>
   );
 };
+
+export const ExpenseFiltersBar = ExpenseFilters;
