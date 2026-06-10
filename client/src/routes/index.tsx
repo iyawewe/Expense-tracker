@@ -15,8 +15,6 @@ import {
 } from "../components/expense/ExpenseFilters";
 import { expensesApi, type Expense, type ExpenseInput } from "../services/api";
 import { exportExpensesToCsv } from "../lib/expense-utils";
-
-// 🌟 THE IMPORTANT FIX: Imported correctly at the very top of the file layout workspace scope
 import userpfp from "@/assets/user.jpeg";
 
 export const Route = createFileRoute("/")({
@@ -47,10 +45,11 @@ function Dashboard() {
 
   const loadLogs = useCallback(async () => {
     try {
-      const response = await fetch("http://localhost:5000/api/logs");
+      // FIX 1: Pointed directly to the /api/logs data endpoint wrapper array
+      const response = await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs");
       if (response.ok) {
         const data = await response.json();
-        setLogs(data);
+        setLogs(data || []);
       }
     } catch (err) {
       console.error("Failed to sync backend logs:", err);
@@ -82,7 +81,8 @@ function Dashboard() {
     localStorage.setItem("app_budget_limit", cleanValue.toString());
     
     try {
-      await fetch("http://localhost:5000/api/logs/budget", {
+      // FIX 2: Migrated budget change log router path link from local to Render
+      await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs/budget", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: `Updated monthly budget limit to $${cleanValue.toLocaleString()}` })
@@ -145,7 +145,8 @@ function Dashboard() {
   const handleClearHistory = async () => {
     if (!confirm("Permanently clear all activity history logs from SQLite database file?")) return;
     try {
-      const response = await fetch("http://localhost:5000/api/logs", { method: "DELETE" });
+      // FIX 3: Swapped log wipe router interface from local environment to live server
+      const response = await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs", { method: "DELETE" });
       if (response.ok) {
         setLogs([]);
         toast.success("Log records wiped from SQLite");
@@ -201,10 +202,8 @@ function Dashboard() {
           <button type="button" onClick={() => setActiveTab("history")} className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-colors ${activeTab === "history" ? "bg-[#1e3a5f] text-white" : "text-blue-100/80 hover:bg-[#1e3a5f]/50"}`}><History className="h-5 w-5 opacity-70" />History</button>
         </nav>
         
-        {/* Profile Footer Panel */}
         <div className="mt-auto border-t border-[#1e3a5f] p-5">
           <div className="flex items-center gap-3">
-            {/* 🌟 CONNECTED VARIABLE INJECTION CONTAINER */}
             <img 
               src={userpfp} 
               alt="Loveneet Singh" 
@@ -282,4 +281,4 @@ function Dashboard() {
       <Toaster richColors position="top-right" />
     </div>
   );
-}
+} 
