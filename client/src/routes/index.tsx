@@ -35,7 +35,13 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
-  const [filters, setFilters] = useState<ExpenseFilters>(DEFAULT_FILTERS);
+  
+  // FIX 1: Explicitly tracking all search parameter state combinations directly 
+  const [filters, setFilters] = useState<ExpenseFilters & { sortBy: string }>(() => ({
+    ...DEFAULT_FILTERS,
+    sortBy: "date-desc"
+  }));
+  
   const [logs, setLogs] = useState<ActivityLog[]>([]);
 
   const [budget, setBudget] = useState<number>(() => {
@@ -45,7 +51,6 @@ function Dashboard() {
 
   const loadLogs = useCallback(async () => {
     try {
-      // FIX 1: Pointed directly to the /api/logs data endpoint wrapper array
       const response = await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs");
       if (response.ok) {
         const data = await response.json();
@@ -81,7 +86,6 @@ function Dashboard() {
     localStorage.setItem("app_budget_limit", cleanValue.toString());
     
     try {
-      // FIX 2: Migrated budget change log router path link from local to Render
       await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs/budget", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,7 +149,6 @@ function Dashboard() {
   const handleClearHistory = async () => {
     if (!confirm("Permanently clear all activity history logs from SQLite database file?")) return;
     try {
-      // FIX 3: Swapped log wipe router interface from local environment to live server
       const response = await fetch("https://expense-tracker-backend-9y4t.onrender.com/api/logs", { method: "DELETE" });
       if (response.ok) {
         setLogs([]);
@@ -235,7 +238,8 @@ function Dashboard() {
           <div className="mb-8"><SummaryCards expenses={filtered} budget={budget} /></div>
 
           <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-4 rounded-2xl border border-white/40 shadow-sm">
-            <div className="flex-1"><ExpenseFiltersBar filters={filters} onChange={setFilters} /></div>
+            {/* FIX 2: Passing down unified search, category, and sort state keys securely */}
+            <div className="flex-1"><ExpenseFiltersBar filters={filters} onChange={setFilters as any} /></div>
             <div className="flex items-center gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 border-[#e8edf3]">
               <span className="text-xs font-bold uppercase tracking-wider text-[#3b6fa0] whitespace-nowrap">Set Budget Limit:</span>
               <div className="relative flex items-center rounded-xl bg-[#e8edf3] px-3 py-1.5"><span className="text-sm font-semibold text-[#3b6fa0] mr-1">$</span><input type="number" value={budget === 0 ? "" : budget} onChange={(e) => handleBudgetChange(Number(e.target.value))} className="w-24 bg-transparent border-none p-0 text-sm font-bold text-[#0f1b3d] focus:ring-0 outline-none" placeholder="0" /></div>
@@ -281,4 +285,4 @@ function Dashboard() {
       <Toaster richColors position="top-right" />
     </div>
   );
-} 
+}

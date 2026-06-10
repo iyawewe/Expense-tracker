@@ -8,12 +8,20 @@ interface Props {
 }
 
 export function SummaryCards({ expenses, budget }: Props) {
-  // FIX: Force fallback to a safe empty array if expenses parameter is undefined or null
   const safeExpenses = expenses || [];
 
   const monthlyExpenses = safeExpenses.filter((e) => e && isCurrentMonth(e.date));
   const spent = monthlyExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
-  const highest = safeExpenses.reduce((max, e) => (e.amount > max ? e.amount : max), 0);
+  
+  // 🔥 FIX: Track the entire top expense object instead of just the raw number amount
+  const highestExpenseItem = safeExpenses.reduce<Expense | null>((maxObj, e) => {
+    if (!maxObj) return e;
+    return (e.amount || 0) > (maxObj.amount || 0) ? e : maxObj;
+  }, null);
+
+  const highestAmount = highestExpenseItem ? highestExpenseItem.amount : 0;
+  const highestCategory = highestExpenseItem ? highestExpenseItem.category : "";
+  const highestNote = highestExpenseItem?.note ? `"${highestExpenseItem.note}"` : "";
   
   const remaining = budget - spent;
   const pct = budget > 0 ? Math.min(100, Math.max(0, (spent / budget) * 100)) : 0;
@@ -27,12 +35,19 @@ export function SummaryCards({ expenses, budget }: Props) {
         icon={<TrendingUp className="h-4 w-4" />} 
         hint={`${monthlyExpenses.length} transactions logged`} 
       />
+      
+      {/* Updated Highest Card to dynamically print the category below the total */}
       <Card
         label="Highest Expense"
-        value={formatCurrency(highest)}
+        value={formatCurrency(highestAmount)}
         icon={<Flame className="h-4 w-4" />}
-        hint={highest === 0 ? "No expenses yet" : "Top single transaction"}
+        hint={
+          highestAmount === 0 
+            ? "No expenses yet" 
+            : `Top in ${highestCategory} ${highestNote}`
+        }
       />
+      
       <Card
         label={overBudget ? "Over Budget Amount" : "Remaining Budget"}
         value={formatCurrency(Math.abs(remaining))}
@@ -75,7 +90,7 @@ function Card({
         <div className="rounded-lg bg-[#e8edf3] p-2 text-[#0f1b3d]">{icon}</div>
       </div>
       <div className="text-3xl font-semibold leading-none tabular-nums text-[#0f1b3d]">{value}</div>
-      {children ? children : hint ? <div className="mt-4 text-sm text-[#3b6fa0]">{hint}</div> : null}
+      {children ? children : hint ? <div className="mt-4 text-sm font-medium text-[#3b6fa0]/80">{hint}</div> : null}
     </div>
   );
 }
