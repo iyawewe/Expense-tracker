@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import sqlite3 from 'sqlite3';
+import Database from 'better-sqlite3'; // <-- Changed
 import path from 'path';
 
 const app = express();
@@ -8,34 +8,29 @@ app.use(cors());
 app.use(express.json());
 
 const dbPath = path.resolve(__dirname, '../database.sqlite');
-const db = new sqlite3.Database(dbPath, (err: Error | null) => {
-  if (err) console.error('Database connection failed:', err.message);
-  else console.log('Connected to persistent SQLite database file at:', dbPath);
-});
+// Open the database synchronously
+const db = new Database(dbPath);
+console.log('Connected to persistent SQLite database file at:', dbPath);
 
-db.serialize(() => {
-  db.run(`
-    CREATE TABLE IF NOT EXISTS expenses (
-      id TEXT PRIMARY KEY,
-      amount REAL NOT NULL,
-      category TEXT NOT NULL,
-      date TEXT NOT NULL,
-      note TEXT,
-      createdAt TEXT NOT NULL
-    )
-  `);
-
-  db.run(`
-    CREATE TABLE IF NOT EXISTS activity_logs (
-      id TEXT PRIMARY KEY,
-      actionType TEXT NOT NULL,
-      description TEXT NOT NULL,
-      timestamp TEXT NOT NULL,
-      date TEXT NOT NULL,
-      createdAt TEXT NOT NULL
-    )
-  `);
-});
+// Initialize Tables
+db.exec(`
+  CREATE TABLE IF NOT EXISTS expenses (
+    id TEXT PRIMARY KEY,
+    amount REAL NOT NULL,
+    category TEXT NOT NULL,
+    date TEXT NOT NULL,
+    note TEXT,
+    createdAt TEXT NOT NULL
+  );
+  CREATE TABLE IF NOT EXISTS activity_logs (
+    id TEXT PRIMARY KEY,
+    actionType TEXT NOT NULL,
+    description TEXT NOT NULL,
+    timestamp TEXT NOT NULL,
+    date TEXT NOT NULL,
+    createdAt TEXT NOT NULL
+  );
+`);
 
 const logToDatabase = (actionType: string, description: string) => {
   const id = Date.now().toString();
@@ -43,17 +38,19 @@ const logToDatabase = (actionType: string, description: string) => {
   const date = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
   const createdAt = new Date().toISOString();
 
-  const query = `INSERT INTO activity_logs (id, actionType, description, timestamp, date, createdAt) VALUES (?, ?, ?, ?, ?, ?)`;
-  db.run(query, [id, actionType, description, timestamp, date, createdAt], (err: Error | null) => {
-    if (err) console.error('Failed to write audit log to SQLite:', err.message);
-  });
+  const stmt = db.prepare(`INSERT INTO activity_logs (id, actionType, description, timestamp, date, createdAt) VALUES (?, ?, ?, ?, ?, ?)`);
+  stmt.run(id, actionType, description, timestamp, date, createdAt);
 };
 
+// --- EXPENSES API ROUTES ---
+
 app.get('/api/expenses', (req: Request, res: Response) => {
-  db.all('SELECT * FROM expenses ORDER BY createdAt DESC', [], (err: Error | null, rows: any[]) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const rows = db.prepare('SELECT * FROM expenses ORDER BY createdAt DESC').all();
     res.json(rows);
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/expenses', (req: Request, res: Response) => {
@@ -61,50 +58,58 @@ app.post('/api/expenses', (req: Request, res: Response) => {
   const id = Date.now().toString();
   const createdAt = new Date().toISOString();
 
-  const query = `INSERT INTO expenses (id, amount, category, date, note, createdAt) VALUES (?, ?, ?, ?, ?, ?)`;
-  db.run(query, [id, amount, category, date, note, createdAt], function (this: sqlite3.RunResult, err: Error | null) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const stmt = db.prepare(`INSERT INTO expenses (id, amount, category, date, note, createdAt) VALUES (?, ?, ?, ?, ?, ?)`);
+    stmt.run(id, amount, category, date, note, createdAt);
     
     logToDatabase("ADD", `Added expense "${note || "Uncategorized"}" under ${category} ($${amount})`);
     res.status(201).json({ id, amount, category, date, note, createdAt });
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.put('/api/expenses/:id', (req: Request, res: Response) => {
   const { id } = req.params;
   const { amount, category, date, note } = req.body;
 
-  const query = `UPDATE expenses SET amount = ?, category = ?, date = ?, note = ? WHERE id = ?`;
-  db.run(query, [amount, category, date, note, id], function (this: sqlite3.RunResult, err: Error | null) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const stmt = db.prepare(`UPDATE expenses SET amount = ?, category = ?, date = ?, note = ? WHERE id = ?`);
+    stmt.run(amount, category, date, note, id);
     
     logToDatabase("UPDATE", `Modified details for "${note || "Uncategorized"}" ($${amount})`);
     res.json({ id, amount, category, date, note });
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.delete('/api/expenses/:id', (req: Request, res: Response) => {
   const { id } = req.params;
 
-  db.get('SELECT * FROM expenses WHERE id = ?', [id], (err: Error | null, row: any) => {
-    if (!err && row) {
-      db.run('DELETE FROM expenses WHERE id = ?', id, function (this: sqlite3.RunResult, err: Error | null) {
-        if (err) return res.status(500).json({ error: err.message });
-        
-        logToDatabase("DELETE", `Removed expense "${row.note || "Uncategorized"}" ($${row.amount})`);
-        res.json({ message: 'Deleted successfully', id });
-      });
+  try {
+    const row: any = db.prepare('SELECT * FROM expenses WHERE id = ?').get(id);
+    if (row) {
+      db.prepare('DELETE FROM expenses WHERE id = ?').run(id);
+      logToDatabase("DELETE", `Removed expense "${row.note || "Uncategorized"}" ($${row.amount})`);
+      res.json({ message: 'Deleted successfully', id });
     } else {
       res.status(404).json({ error: 'Expense not found' });
     }
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
+// --- ACTIVITY LOGS API ROUTES ---
+
 app.get('/api/logs', (req: Request, res: Response) => {
-  db.all('SELECT * FROM activity_logs ORDER BY createdAt DESC', [], (err: Error | null, rows: any[]) => {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    const rows = db.prepare('SELECT * FROM activity_logs ORDER BY createdAt DESC').all();
     res.json(rows);
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.post('/api/logs/budget', (req: Request, res: Response) => {
@@ -114,10 +119,12 @@ app.post('/api/logs/budget', (req: Request, res: Response) => {
 });
 
 app.delete('/api/logs', (req: Request, res: Response) => {
-  db.run('DELETE FROM activity_logs', [], function (this: sqlite3.RunResult, err: Error | null) {
-    if (err) return res.status(500).json({ error: err.message });
+  try {
+    db.prepare('DELETE FROM activity_logs').run();
     res.json({ message: 'Audit history cleared successfully' });
-  });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const PORT = process.env.PORT || 5000;
