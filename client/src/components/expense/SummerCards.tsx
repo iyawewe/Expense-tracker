@@ -4,15 +4,17 @@ import { formatCurrency, isCurrentMonth } from "../../lib/expense-utils";
 
 interface Props {
   expenses: Expense[];
-  budget: number; // 🌟 NEW: Accept the dynamic budget value from the parent state
+  budget: number; 
 }
 
 export function SummaryCards({ expenses, budget }: Props) {
-  const monthlyExpenses = expenses.filter((e) => isCurrentMonth(e.date));
-  const spent = monthlyExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const highest = expenses.reduce((max, e) => (e.amount > max ? e.amount : max), 0);
+  // FIX: Force fallback to a safe empty array if expenses parameter is undefined or null
+  const safeExpenses = expenses || [];
+
+  const monthlyExpenses = safeExpenses.filter((e) => e && isCurrentMonth(e.date));
+  const spent = monthlyExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+  const highest = safeExpenses.reduce((max, e) => (e.amount > max ? e.amount : max), 0);
   
-  // 🌟 UPGRADED: Using 'budget' prop directly instead of the hardcoded constant
   const remaining = budget - spent;
   const pct = budget > 0 ? Math.min(100, Math.max(0, (spent / budget) * 100)) : 0;
   const overBudget = remaining < 0;
@@ -32,7 +34,6 @@ export function SummaryCards({ expenses, budget }: Props) {
         hint={highest === 0 ? "No expenses yet" : "Top single transaction"}
       />
       <Card
-        /* 🌟 DYNAMIC LABEL: Automatically toggles context strings based on balance status */
         label={overBudget ? "Over Budget Amount" : "Remaining Budget"}
         value={formatCurrency(Math.abs(remaining))}
         icon={<CheckCircle2 className="h-4 w-4" />}
