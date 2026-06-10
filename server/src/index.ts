@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import Database from 'better-sqlite3'; // <-- Changed
+import { Database } from 'bun:sqlite'; // <-- Changed to Bun's native SQLite
 import path from 'path';
 
 const app = express();
@@ -8,11 +8,9 @@ app.use(cors());
 app.use(express.json());
 
 const dbPath = path.resolve(__dirname, '../database.sqlite');
-// Open the database synchronously
-const db = new Database(dbPath);
-console.log('Connected to persistent SQLite database file at:', dbPath);
+const db = new Database(dbPath); // <-- Clean, native initialization
+console.log('Connected to persistent Bun SQLite database at:', dbPath);
 
-// Initialize Tables
 db.exec(`
   CREATE TABLE IF NOT EXISTS expenses (
     id TEXT PRIMARY KEY,
@@ -41,8 +39,6 @@ const logToDatabase = (actionType: string, description: string) => {
   const stmt = db.prepare(`INSERT INTO activity_logs (id, actionType, description, timestamp, date, createdAt) VALUES (?, ?, ?, ?, ?, ?)`);
   stmt.run(id, actionType, description, timestamp, date, createdAt);
 };
-
-// --- EXPENSES API ROUTES ---
 
 app.get('/api/expenses', (req: Request, res: Response) => {
   try {
@@ -101,8 +97,6 @@ app.delete('/api/expenses/:id', (req: Request, res: Response) => {
   }
 });
 
-// --- ACTIVITY LOGS API ROUTES ---
-
 app.get('/api/logs', (req: Request, res: Response) => {
   try {
     const rows = db.prepare('SELECT * FROM activity_logs ORDER BY createdAt DESC').all();
@@ -129,5 +123,5 @@ app.delete('/api/logs', (req: Request, res: Response) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Persistent TypeScript backend running smoothly on http://localhost:${PORT}`);
+  console.log(`Persistent Bun-backed runtime running smoothly on port: ${PORT}`);
 });
