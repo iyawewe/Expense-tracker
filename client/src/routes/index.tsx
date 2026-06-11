@@ -36,7 +36,7 @@ function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   
-  // FIX 1: Explicitly tracking all search parameter state combinations directly 
+  // Explicitly tracking all search parameter state combinations directly 
   const [filters, setFilters] = useState<ExpenseFilters & { sortBy: string }>(() => ({
     ...DEFAULT_FILTERS,
     sortBy: "date-desc"
@@ -159,7 +159,25 @@ function Dashboard() {
     }
   };
 
-  const filtered = useMemo(() => applyFilters(expenses, filters), [expenses, filters]);
+  // 🌟 FIXED: Unified memo hook that filters and properly sorts data references (Newest/Highest on top)
+  const filtered = useMemo(() => {
+    const items = applyFilters(expenses, filters);
+    
+    return [...items].sort((a, b) => {
+      switch (filters.sortBy) {
+        case "date-desc":
+          return new Date(b.date).getTime() - new Date(a.date).getTime(); // Newest first
+        case "date-asc":
+          return new Date(a.date).getTime() - new Date(b.date).getTime(); // Oldest first
+        case "amount-desc":
+          return Number(b.amount) - Number(a.amount); // Highest cost first
+        case "amount-asc":
+          return Number(a.amount) - Number(b.amount); // Lowest cost first
+        default:
+          return 0;
+      }
+    });
+  }, [expenses, filters]);
 
   const spendRoastMessage = useMemo(() => {
     const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
@@ -238,7 +256,6 @@ function Dashboard() {
           <div className="mb-8"><SummaryCards expenses={filtered} budget={budget} /></div>
 
           <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between bg-white p-4 rounded-2xl border border-white/40 shadow-sm">
-            {/* FIX 2: Passing down unified search, category, and sort state keys securely */}
             <div className="flex-1"><ExpenseFiltersBar filters={filters} onChange={setFilters as any} /></div>
             <div className="flex items-center gap-3 border-t pt-4 lg:border-t-0 lg:pt-0 border-[#e8edf3]">
               <span className="text-xs font-bold uppercase tracking-wider text-[#3b6fa0] whitespace-nowrap">Set Budget Limit:</span>
