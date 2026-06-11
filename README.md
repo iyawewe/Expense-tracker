@@ -89,7 +89,6 @@ expense-tracker/
     │   └── index.ts            # Main application setup, endpoints, and SQLite drivers
     └── package.json            # Server ecosystem package configuration
 ```
-loveneet
 
 ## 🚀 Next Steps & Future Enhancements
 
@@ -105,5 +104,9 @@ loveneet
 
 𝗚𝗿𝗮𝗻𝘂𝗹𝗮𝗿 𝗗𝗮𝘁𝗲 𝗥𝗮𝗻𝗴𝗲 𝗖𝗼𝗺𝗽𝗮𝗿𝗮𝘁𝗶𝘃𝗲 𝗔𝗻𝗮𝗹𝘆𝘁𝗶𝗰𝘀 𝗣𝗮𝗻𝗲𝗹𝘀: Expand the Recharts data pipeline to generate comparative charts that contrast expenditures between different months or years, tracking your financial trajectory over time. -->
 
+## SCREENSHORTS
 
-
+<img width="1084" height="677" alt="Screenshot 2026-06-11 143232" src="https://github.com/user-attachments/assets/d9db2b52-3580-4891-a8b5-f5037646e1e1" />
+<img width="1890" height="960" alt="Screenshot 2026-06-11 141304" src="https://github.com/user-attachments/assets/7cca8f48-24e3-4009-8276-1333de40c5ad" />
+<img width="1871" height="963" alt="Screenshot 2026-06-11 141248" src="https://github.com/user-attachments/assets/bdc702b6-53a8-4bb5-b571-8e380d14eaff" />
+<img width="1888" height="977" alt="Screenshot 2026-06-11 141227" src="https://github.com/user-attachments/assets/0bca4057-829e-47c4-b3da-be6644943679" />
