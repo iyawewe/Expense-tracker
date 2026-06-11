@@ -1,72 +1,89 @@
-# 💰 Mini Expense Tracker
+💰 Mini Expense Tracker
 
-A full-stack, responsive financial dashboard application designed to log monthly expenditures, track limits dynamically, visualize category breakdowns, and audit operations via an automated database ledger. 
+A full-stack, responsive financial dashboard application designed to log monthly expenditures, track limits dynamically, visualize category breakdowns, and audit operations via an automated database ledger.
 
-**Live Demo URL:** [https://expense-tracker-1-cu7h.onrender.com](https://expense-tracker-1-cu7h.onrender.com)
+Live Demo URL: https://expense-tracker-1-cu7h.onrender.com
 
----
+📋 Project Title & Description
 
-## 📋 Project Title & Description
-### Mini Expense Tracker (Full-Stack Personal Finance Workspace)
+Mini Expense Tracker (Full-Stack Personal Finance Workspace)
+
 For this project, I chose to build a performance-focused, responsive personal finance manager with full database persistence and continuous automated auditing. The core motivation was to engineer an optimized frontend state synchronization workflow paired with a lightweight backend layer that tracks structural inputs in real-time. The solution enables individuals to input financial transactions, set and update custom budget caps dynamically, filter records comprehensively with multi-tiered combinations (search queries, explicit category buckets, and multi-axis sorting hooks), and analyze metrics instantly. It provides an embedded "AI Financial Accountant Roast" engine that assesses threshold compliance to deliver contextual feedback on user spending behavior.
 
----
+🌐 Live Demo Links
 
-## 🌐 Live Demo Links
-* **Production Frontend App:** [https://expense-tracker-1-cu7h.onrender.com](https://expense-tracker-1-cu7h.onrender.com)
-* **Production Backend Core Service:** [https://expense-tracker-backend-9y4t.onrender.com](https://expense-tracker-backend-9y4t.onrender.com)
+Production Frontend App: https://expense-tracker-1-cu7h.onrender.com
 
----
+Production Backend Core Service: https://expense-tracker-backend-9y4t.onrender.com
 
-## 🛠️ Tech Stack & Architecture Rationales
+🛠️ Tech Stack & Architecture Rationales
 
-### Frontend Cluster
-* **React & TypeScript:** Form the structural core. TypeScript guarantees compile-time type safety across database types, components, and payload shapes, minimizing runtime edge errors.
-* **Tailwind CSS:** Used for writing utility-first inline styles to deliver an adaptive layout interface with explicit responsive grid break-points.
-* **Lucide React:** Implements optimized, vector-scaled iconography across navigation links and status wrappers.
-* **Recharts:** Used to create highly precise visual layers. It powers the interactive, animated vertical `BarChart` container that translates backend arrays into distinct category bars.
-* **TanStack Router:** Provides strict type-safe frontend routing states (`Route.createFileRoute("/")`) ensuring isolated views.
-* **Sonner:** Implements rich-color toast notifications to verify backend CRUD operations instantly.
+Frontend Cluster
 
-### Backend Cluster & Storage
-* **Bun & Elysia (or Node.js/Express Engine Framework):** Powers high-throughput routing interfaces with ultra-low initialization overhead.
-* **SQLite & Bun SQL (Persistent Database Engine):** Serves as the storage layer, managing records inside a stable local `.sqlite` binary file. SQLite was selected because its serverless architecture ensures instantaneous disk execution, sub-millisecond query responses, and simplified migration pipelines.
+React & TypeScript: Form the structural core. TypeScript guarantees compile-time type safety across database types, components, and payload shapes, minimizing runtime edge errors.
 
----
+Tailwind CSS: Used for writing utility-first inline styles to deliver an adaptive layout interface with explicit responsive grid break-points.
 
-## 💻 How to Run Locally
+Lucide React: Implements optimized, vector-scaled iconography across navigation links and status wrappers.
 
-Follow these instructions to spin up the entire full-stack ecosystem locally. 
+Recharts: Used to create highly precise visual layers. It powers the interactive, animated vertical BarChart container that translates backend arrays into distinct category bars.
 
-### Prerequisites
-* Ensure you have **Node.js** (v18 or higher) and **Bun** installed on your system.
+TanStack Router: Provides strict type-safe frontend routing states (Route.createFileRoute("/")) ensuring isolated views.
 
-### 1. Clone and Extract Workspace
-```bash
+Sonner: Implements rich-color toast notifications to verify backend CRUD operations instantly.
+
+Backend Cluster & Storage
+
+Bun & Elysia (or Node.js/Express Engine Framework): Powers high-throughput routing interfaces with ultra-low initialization overhead.
+
+SQLite & Bun SQL (Persistent Database Engine): Serves as the storage layer, managing records inside a stable local .sqlite binary file. SQLite was selected because its serverless architecture ensures instantaneous disk execution, sub-millisecond query responses, and simplified migration pipelines.
+
+💻 How to Run Locally
+
+Follow these instructions to spin up the entire full-stack ecosystem locally.
+
+Prerequisites
+
+Ensure you have Node.js (v18 or higher) and Bun installed on your system.
+
+1. Clone and Extract Workspace
+
 git clone [https://github.com/iyawewe/Expense-tracker](https://github.com/iyawewe/Expense-tracker)
 cd Expense-tracker
-```
 
-### 2. Configure and Boot Backend Service
+
+2. Configure and Boot Backend Service
+
 Open a terminal panel to establish your server instance:
-```bash
+
 cd server
 npm install
 bun --watch src/index.ts
-```
 
-### 3. Configure and Boot Frontend Workspace
-```bash
+
+3. Configure and Boot Frontend Workspace
+
 Open a separate terminal panel alongside the backend instance:
+
 cd ../client
 npm install
 npm run dev
-```
-## 🔌 API Documentation
-👉 You can read the full endpoint parameters here: [API.md](./API.md)
 
+
+🌐 Accessing the Application
+
+Once the frontend build initializes, open your browser and head to:
+👉 http://localhost:5173
+
+This will open your local workspace dashboard interface, connected seamlessly to your local database backend server layer on port 5000.
+
+🔌 API Documentation
+
+The full-stack routing suite and detailed endpoint shapes have been completely modularized.
+👉 You can read the full endpoint parameters here: API.md
 
 📂 Project Structure
+
 expense-tracker/
 ├── client/                     # Frontend Application Scope (Vite + React TS Workspace)
 │   ├── src/
@@ -89,14 +106,16 @@ expense-tracker/
     └── package.json            # Server ecosystem package configuration
 
 
-    🚀 Next Steps & Future Enhancements
-What was explicitly deferred (Chosen not to implement in this scope):
+🚀 Next Steps & Future Enhancements
+
+🛑 What Was Explicitly Deferred
+
 Multi-User Multi-Tenant Authentication: The system assumes a single developer workspace profiles frame layout environment. I chose to bypass JWT cookies or OAuth integration to keep data transactions lightweight and speed up delivery.
 
 True Recurring Billing Automation Engine: Fixed itemized recurring sub-payments (like monthly SaaS hosting fees) must currently be entered manually each month instead of relying on a cron schedule.
 
+🔮 What I Build Next
 
-What I would build next:
 True ML-Driven Categorization Predictions: Integrate a locally scoped text vector parsing engine within the /api/expenses route. This would analyze the user's transaction history notes array to automatically assign categories, eliminating manual category configuration dropdown errors.
 
 Granular Date Range Comparative Analytics Panels: Expand the Recharts data pipeline to generate comparative charts that contrast expenditures between different months or years, tracking your financial trajectory over time.
