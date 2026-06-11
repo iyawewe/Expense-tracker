@@ -11,7 +11,8 @@ interface Props {
 }
 
 export function ExpenseTable({ expenses, loading, onEdit, onDelete }: Props) {
-  const sorted = [...expenses].sort((a, b) => (a.date < b.date ? 1 : -1));
+  // 🌟 FIXED: Remove the hardcoded date sort so it honors the user's selected dropdown filters!
+  const sorted = expenses;
 
   return (
     <section className="overflow-hidden rounded-2xl border border-white bg-white shadow-[0_4px_20px_rgba(15,27,61,0.04)]">
