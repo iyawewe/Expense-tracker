@@ -159,23 +159,38 @@ function Dashboard() {
     }
   };
 
-  // 🌟 FIXED: Unified memo hook that filters and properly sorts data references (Newest/Highest on top)
+  // 🌟 FIXED: Universal memo hook that supports both value naming conventions to correctly sort records
   const filtered = useMemo(() => {
     const items = applyFilters(expenses, filters);
     
     return [...items].sort((a, b) => {
-      switch (filters.sortBy) {
-        case "date-desc":
-          return new Date(b.date).getTime() - new Date(a.date).getTime(); // Newest first
-        case "date-asc":
-          return new Date(a.date).getTime() - new Date(b.date).getTime(); // Oldest first
-        case "amount-desc":
-          return Number(b.amount) - Number(a.amount); // Highest cost first
-        case "amount-asc":
-          return Number(a.amount) - Number(b.amount); // Lowest cost first
-        default:
-          return 0;
+      const sortBy = filters.sortBy?.toLowerCase() || "";
+      
+      // Support date descending (newest on top)
+      if (sortBy === "date-desc" || sortBy === "newest") {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        return timeB - timeA;
       }
+      
+      // Support date ascending (oldest on top)
+      if (sortBy === "date-asc" || sortBy === "oldest") {
+        const timeA = a.date ? new Date(a.date).getTime() : 0;
+        const timeB = b.date ? new Date(b.date).getTime() : 0;
+        return timeA - timeB;
+      }
+      
+      // Support amount descending (highest cost on top)
+      if (sortBy === "amount-desc" || sortBy === "highest" || sortBy === "amount_desc") {
+        return Number(b.amount || 0) - Number(a.amount || 0);
+      }
+      
+      // Support amount ascending (lowest cost on top)
+      if (sortBy === "amount-asc" || sortBy === "lowest" || sortBy === "amount_asc") {
+        return Number(a.amount || 0) - Number(b.amount || 0);
+      }
+      
+      return 0;
     });
   }, [expenses, filters]);
 
