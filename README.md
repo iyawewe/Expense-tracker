@@ -91,8 +91,19 @@ expense-tracker/
 ```
 
 
+## 🚀 Next Steps & Future Enhancements
 
+## 🛑 What Was Explicitly Deferred
 
+𝗠𝘂𝗹𝘁𝗶-𝗨𝘀𝗲𝗿 𝗠𝘂𝗹𝘁𝗶-𝗧𝗲𝗻𝗮𝗻𝘁 𝗔𝘂𝘁𝗵𝗲𝗻𝘁𝗶𝗰𝗮𝘁𝗶𝗼𝗻: The system assumes a single developer workspace profiles frame layout environment. I chose to bypass JWT cookies or OAuth integration to keep data transactions lightweight and speed up delivery.
+
+𝗧𝗿𝘂𝗲 𝗥𝗲𝗰𝘂𝗿𝗿𝗶𝗻𝗴 𝗕𝗶𝗹𝗹𝗶𝗻𝗴 𝗔𝘂𝘁𝗼𝗺𝗮𝘁𝗶𝗼𝗻 𝗘𝗻𝗴𝗶𝗻𝗲: Fixed itemized recurring sub-payments (like monthly SaaS hosting fees) must currently be entered manually each month instead of relying on a cron schedule.
+
+## 🔮 What I Build Next
+
+𝗧𝗿𝘂𝗲 𝗠𝗟-𝗗𝗿𝗶𝘃𝗲𝗻 𝗖𝗮𝘁𝗲𝗴𝗼𝗿𝗶𝘇𝗮𝘁𝗶𝗼𝗻 𝗣𝗿𝗲𝗱𝗶𝗰𝘁𝗶𝗼𝗻𝘀: Integrate a locally scoped text vector parsing engine within the /api/expenses route. This would analyze the user's transaction history notes array to automatically assign categories, eliminating manual category configuration dropdown errors.
+
+𝗚𝗿𝗮𝗻𝘂𝗹𝗮𝗿 𝗗𝗮𝘁𝗲 𝗥𝗮𝗻𝗴𝗲 𝗖𝗼𝗺𝗽𝗮𝗿𝗮𝘁𝗶𝘃𝗲 𝗔𝗻𝗮𝗹𝘆𝘁𝗶𝗰𝘀 𝗣𝗮𝗻𝗲𝗹𝘀: Expand the Recharts data pipeline to generate comparative charts that contrast expenditures between different months or years, tracking your financial trajectory over time. -->
 
 
 
